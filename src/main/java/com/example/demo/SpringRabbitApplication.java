@@ -13,6 +13,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 @SpringBootApplication
 public class SpringRabbitApplication {
@@ -23,7 +24,6 @@ public class SpringRabbitApplication {
 		SpringApplication.run(SpringRabbitApplication.class, args);
 
 
-		Thread thread = new Thread();
 
 
 	}
@@ -33,16 +33,27 @@ public class SpringRabbitApplication {
 
 
 
-		ExecutorService executorService = Executors.newCachedThreadPool();
+		ExecutorService executorService = Executors.newFixedThreadPool(10);
+
 
 
 
 	@EventListener(ApplicationStartedEvent.class)
 	public void threadsUp(){
-		NotificationSender sender = applicationContext.getBean(NotificationSender.class);
+		Runnable sender = applicationContext.getBean(NotificationSender.class);
 
-		executorService.submit(sender);
+		IntStream.range(0,10).forEach(i-> {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			executorService.submit(sender);
+				}
+		);
 
 	}
 
 }
+
+
